@@ -1,0 +1,33 @@
+name: Deploy to GitHub Pages
+
+  on:
+  push:
+    branches: [ main ]
+
+permissions:
+  contents: read
+      pages: write
+          id-token: write
+
+            jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+          steps:
+    - uses: actions/checkout@v4
+          - name: Setup Node
+                  uses: actions/setup-node@v4
+                          with:
+                            node-version: '18'
+                        - name: Install dependencies
+                                run: |
+                                          if [ -f package-lock.json ]; then npm ci; elif [ -f package.json ]; then npm install; fi
+                                      - name: Build site
+                                              run: |
+                                                        if npm run | grep -q build; then npm run build; else echo "No build script defined"; fi
+                                                              - name: Upload artifact
+                                                                      uses: actions/upload-pages-artifact@v1
+                                                                              with:
+                                                                                path: './build'
+                                                                                      - name: Deploy to GitHub Pages
+                                                                                              id: deployment
+                                                                                                      uses: actions/deploy-pages@v1
