@@ -1,0 +1,4 @@
+cd ~/path/to/suraj-kadam
+git fetch origin
+git checkout claude/training-register-schema-1q9uft
+git push -u origin claude/training-register-schema-1q9uft
