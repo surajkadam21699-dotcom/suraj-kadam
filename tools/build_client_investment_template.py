@@ -22,6 +22,7 @@ from openpyxl import Workbook
 from openpyxl.chart import BarChart, PieChart, Reference
 from openpyxl.formatting.rule import CellIsRule
 from openpyxl.styles import Alignment, Border, Font, PatternFill, Side
+from openpyxl.utils import get_column_letter
 from openpyxl.worksheet.datavalidation import DataValidation
 
 # ---------------------------------------------------------------- constants --
@@ -41,6 +42,7 @@ UNITS = '#,##0.0000;(#,##0.0000);-'
 NAV = '#,##0.0000;(#,##0.0000);-'
 PCT = '0.00%;(0.00%);-'
 CNT = '#,##0;(#,##0);-'
+DECIMAL = '#,##0.00;(#,##0.00);-'
 DATE = 'DD-MMM-YY'
 TEXT = '@'
 
@@ -76,16 +78,16 @@ SEGMENTS = ["Retail", "HNI", "Ultra HNI", "Corporate", "NRI"]
 C_NAME = f"Clients!$B${CLI_FIRST}:$B${CLI_LAST}"
 I_CLI = f"Investments!$A${INV_FIRST}:$A${INV_LAST}"
 I_CAT = f"Investments!$B${INV_FIRST}:$B${INV_LAST}"
-I_ASSET = f"Investments!$C${INV_FIRST}:$C${INV_LAST}"
-I_PUR = f"Investments!$G${INV_FIRST}:$G${INV_LAST}"
-I_SWIN = f"Investments!$H${INV_FIRST}:$H${INV_LAST}"
-I_DIVR = f"Investments!$I${INV_FIRST}:$I${INV_LAST}"
-I_RED = f"Investments!$J${INV_FIRST}:$J${INV_LAST}"
-I_SWOUT = f"Investments!$K${INV_FIRST}:$K${INV_LAST}"
-I_DIVP = f"Investments!$L${INV_FIRST}:$L${INV_LAST}"
-I_CUR = f"Investments!$M${INV_FIRST}:$M${INV_LAST}"
-I_INVSD = f"Investments!$P${INV_FIRST}:$P${INV_LAST}"
-I_XIRR = f"Investments!$T${INV_FIRST}:$T${INV_LAST}"
+I_PUR = f"Investments!$F${INV_FIRST}:$F${INV_LAST}"
+I_SWIN = f"Investments!$G${INV_FIRST}:$G${INV_LAST}"
+I_DIVR = f"Investments!$H${INV_FIRST}:$H${INV_LAST}"
+I_RED = f"Investments!$I${INV_FIRST}:$I${INV_LAST}"
+I_SWOUT = f"Investments!$J${INV_FIRST}:$J${INV_LAST}"
+I_DIVP = f"Investments!$K${INV_FIRST}:$K${INV_LAST}"
+I_CUR = f"Investments!$L${INV_FIRST}:$L${INV_LAST}"
+I_XIRR = f"Investments!$O${INV_FIRST}:$O${INV_LAST}"
+I_ASSET = f"Investments!$P${INV_FIRST}:$P${INV_LAST}"
+I_INVSD = f"Investments!$Q${INV_FIRST}:$Q${INV_LAST}"
 I_STAT = f"Investments!$U${INV_FIRST}:$U${INV_LAST}"
 
 wb = Workbook()
@@ -147,9 +149,10 @@ widths(ins, {"A": 3, "B": 30, "C": 88, "D": 12, "E": 12, "F": 12})
 CONTENT = [
     ("HOW TO USE", None),
     ("1. Clients", "Enter every client once - code, name, PAN, address, mobile, email, DOB, 'Rep By' / family head. This list drives the dropdowns, the client-wise review and the Client Report header."),
-    ("2. Investments", "One row per scheme per client - the same columns your software prints. Paste Purchase, Switch In, Div Reinv, Redemption, Switch Out, Div Pay, Cur. Value, Cur. Units, Cur. NAV and XIRR straight from the export."),
-    ("3. Total Review", "Read-only dashboard: firm-level snapshot, client-wise review, asset-class review and category-wise review, with charts."),
-    ("4. Client Report", "Pick one client from the dropdown to get that client's header block, summary and scheme list - the single-client view your software prints."),
+    ("2. Import Report", "The easy way to load data. Paste a whole Profit & Loss export on the left of that sheet; clean register rows appear on the right, ready to copy into Investments. Category headings, transaction sub-tables and total lines are dropped for you, and the scheme name and folio are split apart."),
+    ("3. Investments", "One row per scheme per client. Columns A to O are one unbroken block, in the same order as the Import Report output, so a whole report goes in with a single Paste Special > Values on cell A6. Columns P to V are formulas - never paste over them."),
+    ("4. Total Review", "Read-only dashboard: firm-level snapshot, client-wise review, asset-class review and category-wise review, with charts."),
+    ("5. Client Report", "Pick one client from the dropdown to get that client's header block, summary and scheme list - the single-client view your software prints."),
     (None, None),
     ("HOW THE MATHS WORKS", None),
     ("Total Invested", "Purchase + Switch In + Div Reinv"),
@@ -164,6 +167,7 @@ CONTENT = [
     ("Blue text on yellow fill", "Input cells - type or paste here."),
     ("Black text on grey fill", "Formula cells - do not overwrite, they will stop calculating."),
     ("EXAMPLE rows", "Clients row 4 and Investments row 6 are filled in as a format guide. Delete both before real use."),
+    ("Paste Special > Values", "Use this rather than a plain Ctrl+V when pasting into Investments: a plain paste drags the source formatting across and can wreck the column widths, fills and dropdowns."),
     (None, None),
     ("GOOD TO KNOW", None),
     ("Capacity", f"{CLI_LAST - CLI_FIRST + 1} clients, {INV_LAST - INV_FIRST + 1} scheme rows, {RPT_LAST - RPT_FIRST + 1} schemes per client in the Client Report. To add rows, insert them INSIDE the existing table so the formulas extend with them."),
@@ -254,26 +258,31 @@ dv_seg.add(f"E{CLI_FIRST}:E{CLI_LAST}")
 iv = wb.create_sheet("Investments")
 iv.sheet_view.showGridLines = False
 banner(iv, "SCHEME-WISE INVESTMENT REGISTER",
-       "One row per scheme per client - same columns as the software's Profit & Loss export. Yellow = paste here, grey = calculated.", 22)
+       "One row per scheme per client. Columns A to O are one unbroken paste block; P to V calculate themselves.", 22)
 head(iv, 5, [
-    "Client Name", "Category", "Asset Class", "Scheme Name", "Folio No.",
-    "Inv. Since", "Purchase", "Switch In", "Div Reinv", "Redemption",
-    "Switch Out", "Div Pay", "Cur. Value", "Cur. Units", "Cur. NAV",
-    "Total Invested", "Withdrawn", "Gain / Loss", "Abs. Rtn.", "XIRR",
+    "Client Name", "Category", "Scheme Name", "Folio No.", "Inv. Since",
+    "Purchase", "Switch In", "Div Reinv", "Redemption", "Switch Out",
+    "Div Pay", "Cur. Value", "Cur. Units", "Cur. NAV", "XIRR",
+    "Asset Class", "Total Invested", "Withdrawn", "Gain / Loss", "Abs. Rtn.",
     "Status", "Rpt. Idx",
 ])
-widths(iv, {"A": 30, "B": 32, "C": 12, "D": 46, "E": 18, "F": 12, "G": 16,
-            "H": 16, "I": 13, "J": 15, "K": 15, "L": 12, "M": 17, "N": 14,
-            "O": 13, "P": 17, "Q": 16, "R": 16, "S": 11, "T": 10, "U": 10, "V": 9})
-iv.freeze_panes = "F6"
+widths(iv, {"A": 30, "B": 32, "C": 46, "D": 18, "E": 12, "F": 16, "G": 16,
+            "H": 13, "I": 15, "J": 15, "K": 12, "L": 17, "M": 14, "N": 13,
+            "O": 10, "P": 12, "Q": 17, "R": 16, "S": 16, "T": 11, "U": 10, "V": 9})
+iv.freeze_panes = "C6"
 
-iv.cell(row=4, column=1, value="▼ dropdown").font = Font(name=FONT, size=8, italic=True, color="808080")
-iv.cell(row=4, column=7, value="▼ paste the software's figures into these columns").font = Font(name=FONT, size=8, italic=True, color="808080")
-iv.cell(row=4, column=16, value="▼ calculated").font = Font(name=FONT, size=8, italic=True, color="808080")
+iv.cell(row=4, column=1, value="▼ A to O are one block - paste all 15 columns in one go "
+                               "(the Import Report sheet prepares them for you)").font = \
+    Font(name=FONT, size=8, italic=True, color="808080")
+iv.cell(row=4, column=16, value="▼ calculated - never paste over these").font = \
+    Font(name=FONT, size=8, italic=True, color="808080")
 
-INPUT_SPEC = {1: TEXT, 2: TEXT, 4: TEXT, 5: TEXT, 6: DATE, 7: INR, 8: INR, 9: INR,
-              10: INR, 11: INR, 12: INR, 13: INR, 14: UNITS, 15: NAV, 20: PCT}
-CALC_SPEC = {3: TEXT, 16: INR, 17: INR, 18: INR, 19: PCT, 21: TEXT, 22: CNT}
+# A-O are typed or pasted; P-V are formulas. Keeping every input column in one
+# unbroken block is what lets a whole report paste in with a single Ctrl+V.
+INPUT_SPEC = {1: TEXT, 2: TEXT, 3: TEXT, 4: TEXT, 5: DATE, 6: INR, 7: INR,
+              8: INR, 9: INR, 10: INR, 11: INR, 12: INR, 13: UNITS, 14: NAV,
+              15: PCT}
+CALC_SPEC = {16: TEXT, 17: INR, 18: INR, 19: INR, 20: PCT, 21: TEXT, 22: CNT}
 
 for row in range(INV_FIRST, INV_LAST + 1):
     for col, fmt in INPUT_SPEC.items():
@@ -281,18 +290,18 @@ for row in range(INV_FIRST, INV_LAST + 1):
     for col, fmt in CALC_SPEC.items():
         style_body(iv.cell(row=row, column=col), fmt, "calc")
 
-    iv.cell(row=row, column=3,
-            value=f'=IF($B{row}="","",IFERROR(TRIM(LEFT($B{row},FIND(" - ",$B{row})-1)),"Others"))')
     iv.cell(row=row, column=16,
-            value=f'=IF($A{row}="","",SUM($G{row}:$I{row}))')
+            value=f'=IF($B{row}="","",IFERROR(TRIM(LEFT($B{row},FIND(" - ",$B{row})-1)),"Others"))')
     iv.cell(row=row, column=17,
-            value=f'=IF($A{row}="","",SUM($J{row}:$L{row}))')
+            value=f'=IF($A{row}="","",SUM($F{row}:$H{row}))')
     iv.cell(row=row, column=18,
-            value=f'=IF($A{row}="","",($M{row}+$Q{row})-$P{row})')
+            value=f'=IF($A{row}="","",SUM($I{row}:$K{row}))')
     iv.cell(row=row, column=19,
-            value=f'=IF(OR($A{row}="",$P{row}=0),"",$R{row}/$P{row})')
+            value=f'=IF($A{row}="","",($L{row}+$R{row})-$Q{row})')
+    iv.cell(row=row, column=20,
+            value=f'=IF(OR($A{row}="",$Q{row}=0),"",$S{row}/$Q{row})')
     iv.cell(row=row, column=21,
-            value=f'=IF($A{row}="","",IF($M{row}>0,"Live","Exited"))')
+            value=f'=IF($A{row}="","",IF($L{row}>0,"Live","Exited"))')
     iv.cell(row=row, column=22,
             value=(f'=IF($A{row}="","",IF($A{row}=\'Client Report\'!$C$4,'
                    f'COUNTIFS($A${INV_FIRST}:$A{row},\'Client Report\'!$C$4),""))'))
@@ -308,19 +317,18 @@ iv.add_data_validation(dv_cat)
 dv_cli.add(f"A{INV_FIRST}:A{INV_LAST}")
 dv_cat.add(f"B{INV_FIRST}:B{INV_LAST}")
 
-for col in ("R", "S", "T"):
+for col in ("O", "S", "T"):
     rng = f"{col}{INV_FIRST}:{col}{INV_LAST}"
     iv.conditional_formatting.add(rng, CellIsRule(operator="lessThan", formula=["0"], font=RED_FONT))
     iv.conditional_formatting.add(rng, CellIsRule(operator="greaterThan", formula=["0"], font=GREEN_FONT))
 
 EX_INV = {1: "Sample Client (EXAMPLE)", 2: "Debt - Low Duration Fund",
-          4: "Bluechip Low Duration Fund - Regular Plan - Growth", 5: "1910625/49",
-          6: "2021-06-01", 7: 0, 8: 190000, 9: 0, 10: 0, 11: 195243.79, 12: 0,
-          13: 0, 14: 0, 15: 41.2489, 20: 0.038}
+          3: "Bluechip Low Duration Fund - Regular Plan - Growth", 4: "1910625/49",
+          5: "2021-06-01", 7: 190000, 10: 195243.79, 14: 41.2489, 15: 0.038}
 for col, val in EX_INV.items():
     c = iv.cell(row=INV_FIRST, column=col, value=val)
     c.font = Font(name=FONT, size=10, color="0000FF", italic=True)
-iv.cell(row=INV_FIRST, column=6).number_format = DATE
+iv.cell(row=INV_FIRST, column=5).number_format = DATE
 note(iv, INV_LAST + 2, 1,
      "EXAMPLE row above - delete it before real use. Leave a cell blank wherever the software prints 0.00.")
 
@@ -584,9 +592,9 @@ head(cr, 21, ["Sr.", "Category", "Scheme Name", "Folio No.", "Inv. Since",
               "Total Invested", "Withdrawn", "Cur. Value", "Gain / Loss",
               "Abs. Rtn.", "XIRR"], start_col=1, height=30)
 
-DETAIL_SRC = [(2, "B", TEXT), (3, "D", TEXT), (4, "E", TEXT), (5, "F", DATE),
-              (6, "P", INR), (7, "Q", INR), (8, "M", INR), (9, "R", INR),
-              (10, "S", PCT), (11, "T", PCT)]
+DETAIL_SRC = [(2, "B", TEXT), (3, "C", TEXT), (4, "D", TEXT), (5, "E", DATE),
+              (6, "Q", INR), (7, "R", INR), (8, "L", INR), (9, "S", INR),
+              (10, "T", PCT), (11, "O", PCT)]
 for i in range(RPT_LAST - RPT_FIRST + 1):
     row = RPT_FIRST + i
     stripe = WHITE if i % 2 == 0 else GREY
@@ -629,12 +637,169 @@ note(cr, TOT + 2, 1,
      "If a client holds more, the count in the summary strip is still complete.")
 cr.freeze_panes = "A22"
 
+# =========================================================== Import Report ==
+# Paste a whole Profit & Loss export in on the left; read register-shaped rows
+# out on the right. The software prints category headings, per-scheme
+# transaction sub-tables and total lines, none of which line up with the
+# register - this sheet drops them and reshapes what is left.
+im = wb.create_sheet("Import Report")
+im.sheet_view.showGridLines = False
+banner(im, "IMPORT A PROFIT & LOSS REPORT",
+       "Paste the report on the left - ready-to-paste register rows appear on the right.", 16)
+
+SRC_FIRST, SRC_LAST = 9, 2008        # paste area rows
+OUT_FIRST, OUT_LAST = 9, 408         # extracted rows (400 schemes)
+OUT_COL_FIRST, OUT_COL_LAST = 24, 38  # X to AL - same 15 columns as Investments A:O
+POS_COL = 23                          # W: row position of each extracted scheme
+SRC = f"$A${SRC_FIRST}:$A${SRC_LAST}"
+OUT_A = get_column_letter(OUT_COL_FIRST)
+OUT_Z = get_column_letter(OUT_COL_LAST)
+
+STEPS = [
+    ("STEP 1", "Open the client's Profit & Loss report, press Ctrl+A then Ctrl+C to copy the whole sheet."),
+    ("STEP 2", f"Click cell A{SRC_FIRST} below and press Ctrl+V. Category headings, transaction "
+               "rows and total lines are ignored automatically."),
+    ("STEP 3", "Check the Client Name box on the right. It is read from the report header - "
+               "type over it, or pick from the list, so it matches the Clients sheet exactly."),
+    ("STEP 4", f"Select {OUT_A}{OUT_FIRST}:{OUT_Z}... down to the last filled row, press Ctrl+C, then on "
+               "the Investments sheet right-click cell A6 and choose Paste Special > Values."),
+]
+for i, (tag, text) in enumerate(STEPS):
+    r = 4 + i
+    tc = im.cell(row=r, column=1, value=tag)
+    tc.font = Font(name=FONT, size=9, bold=True, color=WHITE)
+    tc.fill = PatternFill("solid", fgColor=BLUE)
+    tc.alignment = Alignment(horizontal="center", vertical="center")
+    im.merge_cells(start_row=r, start_column=2, end_row=r, end_column=16)
+    bc = im.cell(row=r, column=2, value=text)
+    bc.font = BODY_FONT
+    bc.alignment = Alignment(vertical="center", indent=1)
+
+# Client name: detected from the report header in W5, cleaned in R6, and
+# overridable in R5 - the extracted rows use the override when it is filled.
+lbl = im.cell(row=5, column=17, value="Client Name")
+lbl.font = Font(name=FONT, size=10, bold=True)
+lbl.fill = PatternFill("solid", fgColor=LIGHT_BLUE)
+lbl.border = BOX
+lbl.alignment = Alignment(vertical="center", indent=1)
+sel = im.cell(row=5, column=18)
+sel.font = INPUT_FONT
+sel.fill = PatternFill("solid", fgColor=YELLOW)
+sel.border = BOX
+sel.alignment = Alignment(vertical="center", indent=1)
+dv_imp = DataValidation(type="list", formula1=C_NAME, allow_blank=True)
+im.add_data_validation(dv_imp)
+dv_imp.add("R5")
+
+hint = im.cell(row=6, column=17, value="read from report:")
+hint.font = Font(name=FONT, size=9, italic=True, color="808080")
+hint.alignment = Alignment(horizontal="right", vertical="center")
+im.cell(row=5, column=POS_COL, value=(
+    f'=IFERROR(INDEX({SRC},MATCH(1,$V${SRC_FIRST}:$V${SRC_LAST},0)),"")'))
+det = im.cell(row=6, column=18, value=(
+    '=IF($W$5="","",TRIM(IF(ISNUMBER(SEARCH(" REP BY ",$W$5)),'
+    'LEFT($W$5,SEARCH(" REP BY ",$W$5)-1),SUBSTITUTE($W$5,"()",""))))'))
+det.font = Font(name=FONT, size=9, italic=True, color="595959")
+det.alignment = Alignment(vertical="center", indent=1)
+
+# --- paste area: the report's own column layout, left unstyled so a paste
+#     lands cleanly and the file stays small
+head(im, 8, ["Scheme Name  (+ Folio)", "", "", "Inv. Since", "Purchase", "Switch In",
+             "Div Reinv", "Redemption", "Switch Out", "Div Pay", "Cur. Value",
+             "Cur. Units", "Cur. NAV", "Gain/Loss", "Abs. Rtn.", "XIRR"], height=30)
+widths(im, {"A": 46, "B": 9, "C": 9, "D": 11, "E": 13, "F": 13, "G": 11, "H": 13,
+            "I": 13, "J": 11, "K": 13, "L": 12, "M": 11, "N": 13, "O": 10, "P": 9,
+            "Q": 17, "R": 30})
+im.freeze_panes = "A9"
+
+# --- helper columns S-W: category carry-down, scheme flag, running index,
+#     client-name flag, and the matched source row for each output line
+for r in range(SRC_FIRST, SRC_LAST + 1):
+    is_category = (f'AND(ISTEXT($A{r}),ISNUMBER(SEARCH(" - ",$A{r})),'
+                   f'ISERROR(SEARCH("Folio",$A{r})),$D{r}="")')
+    carry = '""' if r == SRC_FIRST else f"$S{r - 1}"
+    im.cell(row=r, column=19, value=f'=IF({is_category},TRIM($A{r}),{carry})')
+    im.cell(row=r, column=20,
+            value=f'=IF(AND(ISNUMBER(SEARCH("Folio",$A{r})),$D{r}<>""),1,"")')
+    im.cell(row=r, column=21,
+            value=f'=IF($T{r}=1,COUNTIF($T${SRC_FIRST}:$T{r},1),"")')
+    im.cell(row=r, column=22,
+            value=f'=IF(AND(ISTEXT($A{r}),LEFT($A{r + 1},3)="Pan"),1,"")')
+
+# --- extracted rows, in Investments A:O order -------------------------------
+im.merge_cells(start_row=7, start_column=OUT_COL_FIRST, end_row=7, end_column=OUT_COL_LAST)
+rdy = im.cell(row=7, column=OUT_COL_FIRST,
+              value="READY TO PASTE  →  copy these rows, then Investments!A6 → "
+                    "Paste Special → Values")
+rdy.font = Font(name=FONT, size=10, bold=True, color=WHITE)
+rdy.fill = PatternFill("solid", fgColor=NAVY)
+rdy.alignment = Alignment(vertical="center", indent=1)
+
+head(im, 8, ["Client Name", "Category", "Scheme Name", "Folio No.", "Inv. Since",
+             "Purchase", "Switch In", "Div Reinv", "Redemption", "Switch Out",
+             "Div Pay", "Cur. Value", "Cur. Units", "Cur. NAV", "XIRR"],
+     start_col=OUT_COL_FIRST, fill=NAVY, height=30)
+for col, width in zip(range(OUT_COL_FIRST, OUT_COL_LAST + 1),
+                      (30, 32, 46, 16, 12, 14, 14, 12, 14, 14, 11, 15, 13, 12, 9)):
+    im.column_dimensions[get_column_letter(col)].width = width
+
+# output column -> source column on the pasted report
+AMOUNT_SRC = {29: "E", 30: "F", 31: "G", 32: "H", 33: "I", 34: "J", 35: "K",
+              36: "L", 37: "M"}
+OUT_FMT = {24: TEXT, 25: TEXT, 26: TEXT, 27: TEXT, 28: DATE, 36: UNITS, 37: NAV,
+           38: PCT}
+
+
+def src_index(letter, pos):
+    return f'INDEX(${letter}${SRC_FIRST}:${letter}${SRC_LAST},{pos})'
+
+
+for i in range(OUT_LAST - OUT_FIRST + 1):
+    r = OUT_FIRST + i
+    pos = f"$W{r}"
+    idx = im.cell(row=r, column=POS_COL,
+                  value=f'=IFERROR(MATCH({i + 1},$U${SRC_FIRST}:$U${SRC_LAST},0),"")')
+    idx.font = Font(name=FONT, size=9, color="A6A6A6")
+
+    clean = f'SUBSTITUTE({src_index("A", pos)},CHAR(10)," ")'
+    since = src_index("D", pos)
+    values = {
+        24: f'=IF({pos}="","",IF($R$5<>"",$R$5,$R$6))',
+        25: f'=IF({pos}="","",{src_index("S", pos)})',
+        26: (f'=IF({pos}="","",IFERROR(TRIM(LEFT({clean},SEARCH("Folio",{clean})-1)),'
+             f'TRIM({clean})))'),
+        27: (f'=IF({pos}="","",IFERROR(TRIM(SUBSTITUTE(MID({clean},'
+             f'SEARCH("Folio",{clean})+5,200),":","")),""))'),
+        28: (f'=IF({pos}="","",IF(ISNUMBER({since}),{since},'
+             f'IFERROR(DATE(2000+VALUE(RIGHT({since},2)),VALUE(MID({since},4,2)),'
+             f'VALUE(LEFT({since},2))),"")))'),
+    }
+    for col, letter in AMOUNT_SRC.items():
+        ref = src_index(letter, pos)
+        values[col] = (f'=IF({pos}="","",IFERROR(IF(ISNUMBER({ref}),{ref},'
+                       f'VALUE(SUBSTITUTE({ref},",",""))),""))')
+    xirr = src_index("P", pos)
+    values[38] = (f'=IF({pos}="","",IFERROR(IF(ISNUMBER({xirr}),{xirr},'
+                  f'VALUE(SUBSTITUTE({xirr},"%",""))/100),""))')
+
+    stripe = WHITE if i % 2 == 0 else GREY
+    for col in range(OUT_COL_FIRST, OUT_COL_LAST + 1):
+        cell = im.cell(row=r, column=col, value=values[col])
+        style_body(cell, OUT_FMT.get(col, DECIMAL), "calc", stripe)
+
+for col in range(19, POS_COL + 1):
+    im.column_dimensions[get_column_letter(col)].hidden = True
+
+note(im, OUT_LAST + 2, OUT_COL_FIRST,
+     f"Takes up to {OUT_LAST - OUT_FIRST + 1} schemes from a report of up to "
+     f"{SRC_LAST - SRC_FIRST + 1} rows. Clear the paste area before importing the next client.")
+
 # helper column is machinery, not data - keep it out of the way
 iv.column_dimensions["V"].hidden = True
 
 wb._sheets = [wb[name] for name in
-              ["Instructions", "Clients", "Investments", "Total Review",
-               "Client Report", "Lists"]]
+              ["Instructions", "Clients", "Import Report", "Investments",
+               "Total Review", "Client Report", "Lists"]]
 wb.active = wb.sheetnames.index("Total Review")
 out = sys.argv[1] if len(sys.argv) > 1 else "Client_Investment_Tracker.xlsx"
 wb.save(out)

@@ -38,11 +38,13 @@ COL = {"since": 4, "purchase": 5, "switch_in": 6, "div_reinv": 7, "redemption": 
        "cur_nav": 13, "gain": 14, "abs_rtn": 15, "xirr": 16}
 
 # register column (Investments sheet) for each parsed field
+# Investments columns A-O, in order - the same 15 columns the CSV carries, so
+# a CSV row and a register row line up one to one.
 REGISTER = [
-    ("client", 1), ("category", 2), ("scheme", 4), ("folio", 5), ("since", 6),
-    ("purchase", 7), ("switch_in", 8), ("div_reinv", 9), ("redemption", 10),
-    ("switch_out", 11), ("div_pay", 12), ("cur_value", 13), ("cur_units", 14),
-    ("cur_nav", 15), ("xirr", 20),
+    ("client", 1), ("category", 2), ("scheme", 3), ("folio", 4), ("since", 5),
+    ("purchase", 6), ("switch_in", 7), ("div_reinv", 8), ("redemption", 9),
+    ("switch_out", 10), ("div_pay", 11), ("cur_value", 12), ("cur_units", 13),
+    ("cur_nav", 14), ("xirr", 15),
 ]
 CSV_HEADER = ["Client Name", "Category", "Scheme Name", "Folio No.", "Inv. Since",
               "Purchase", "Switch In", "Div Reinv", "Redemption", "Switch Out",
@@ -195,7 +197,7 @@ INPUT_FONT = Font(name="Arial", size=10, color="0000FF")
 
 # Input columns only - the calculated columns must keep their formulas.
 CLIENT_INPUT_COLS = tuple(range(1, 13))
-REGISTER_INPUT_COLS = (1, 2, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 20)
+REGISTER_INPUT_COLS = tuple(range(1, 16))
 
 
 def blank_row(sheet, row, cols):
