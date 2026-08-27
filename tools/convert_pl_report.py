@@ -37,6 +37,13 @@ COL = {"since": 4, "purchase": 5, "switch_in": 6, "div_reinv": 7, "redemption": 
        "switch_out": 9, "div_pay": 10, "cur_value": 11, "cur_units": 12,
        "cur_nav": 13, "gain": 14, "abs_rtn": 15, "xirr": 16}
 
+# the transaction sub-table printed under each scheme
+TXN = {"sr": 1, "type": 2, "date": 5, "amount": 7, "pur_nav": 9, "units": 11,
+       "sensex": 13, "cur_value": 15, "days": 17, "stt": 19}
+TXN_HEADER = ["Client Name", "Category", "Scheme Name", "Folio No.", "Sr.",
+              "Transaction Type", "Date", "Amount", "Pur. NAV", "Units",
+              "Sensex", "Cur. Value", "Days", "STT"]
+
 # register column (Investments sheet) for each parsed field
 # Investments columns A-O, in order - the same 15 columns the CSV carries, so
 # a CSV row and a register row line up one to one.
@@ -106,11 +113,39 @@ def header_field(sheet, row, prefix=""):
     return text.strip()
 
 
+def read_transactions(sheet, scheme_row, client, category, scheme, folio):
+    """Read the Sr./Transaction Type/Date/Amount block printed under a scheme.
+
+    The block starts on the row after the scheme summary line and ends at the
+    sub-table's own "Total" line or at the next scheme / category heading.
+    """
+    out = []
+    r = scheme_row + 1
+    if str(sheet.cell(row=r, column=1).value or "").strip() != "Sr.":
+        return out
+    r += 1
+    while r <= sheet.max_row:
+        sr = sheet.cell(row=r, column=TXN["sr"]).value
+        if not isinstance(sr, (int, float)):
+            break                      # "Total", a new scheme, or a heading
+        out.append({
+            "client": client, "category": category, "scheme": scheme, "folio": folio,
+            "sr": int(sr),
+            "type": str(sheet.cell(row=r, column=TXN["type"]).value or "").strip(),
+            "date": parse_date(sheet.cell(row=r, column=TXN["date"]).value),
+            **{k: num(sheet.cell(row=r, column=TXN[k]).value) for k in
+               ("amount", "pur_nav", "units", "sensex", "cur_value", "days", "stt")},
+        })
+        r += 1
+    return out
+
+
 def parse_report(path):
     """-> (client dict, [scheme row dicts], grand total dict or None)"""
     sheet = load_workbook(path, data_only=True).worksheets[0]
 
-    raw_name = re.sub(r"\s*\(\s*\)\s*$", "", str(sheet["A2"].value or "").strip())
+    # the header prints the name as "NAME (PAN)" or "NAME ()" - drop the bracket
+    raw_name = re.sub(r"\s*\([^)]*\)\s*$", "", str(sheet["A2"].value or "").strip())
     name, rep_by = raw_name, ""
     match = re.split(r"\s+REP\s+BY\s+", raw_name, flags=re.IGNORECASE)
     if len(match) == 2:
@@ -125,7 +160,7 @@ def parse_report(path):
         "dob": parse_date(header_field(sheet, 7, "DOB:")),
     }
 
-    rows, grand, category = [], None, None
+    rows, txns, grand, category = [], [], None, None
     for r in range(9, sheet.max_row + 1):
         label = sheet.cell(row=r, column=1).value
         if not isinstance(label, str) or not label.strip():
@@ -143,11 +178,14 @@ def parse_report(path):
 
         parts = FOLIO_RE.split(label.replace("\n", " "), 1)
         scheme, folio = parts[0], (parts[1] if len(parts) > 1 else "")
+        scheme_name, folio_no = " ".join(scheme.split()), folio.strip()
+        txns.extend(read_transactions(sheet, r, name, category or "",
+                                      scheme_name, folio_no))
         rows.append({
             "client": name,
             "category": category or "",
-            "scheme": " ".join(scheme.split()),
-            "folio": folio.strip(),
+            "scheme": scheme_name,
+            "folio": folio_no,
             "since": parse_date(sheet.cell(row=r, column=COL["since"]).value),
             **{k: num(sheet.cell(row=r, column=COL[k]).value) for k in
                ("purchase", "switch_in", "div_reinv", "redemption", "switch_out",
@@ -156,7 +194,7 @@ def parse_report(path):
             "reported_gain": num(sheet.cell(row=r, column=COL["gain"]).value),
             "reported_abs": pct(sheet.cell(row=r, column=COL["abs_rtn"]).value),
         })
-    return client, rows, grand
+    return client, rows, grand, txns
 
 
 def check(client, rows, grand, tolerance=1.0):
@@ -214,7 +252,49 @@ def blank_row(sheet, row, cols):
             cell.font = INPUT_FONT
 
 
-def write_workbook(out_path, clients, rows):
+def add_transactions_sheet(wb, txns):
+    """Append every parsed transaction as a plain, sortable table."""
+    from openpyxl.styles import Alignment, Border, Font, PatternFill, Side
+
+    ws = wb.create_sheet("Transactions")
+    ws.sheet_view.showGridLines = False
+    thin = Side(style="thin", color="BFBFBF")
+    box = Border(left=thin, right=thin, top=thin, bottom=thin)
+
+    for i, text in enumerate(TXN_HEADER, start=1):
+        c = ws.cell(row=1, column=i, value=text)
+        c.font = Font(name="Arial", size=9, bold=True, color="FFFFFF")
+        c.fill = PatternFill("solid", fgColor="1F3864")
+        c.alignment = Alignment(horizontal="center", vertical="center", wrap_text=True)
+        c.border = box
+    ws.row_dimensions[1].height = 28
+
+    money = '#,##0.00;(#,##0.00);-'
+    for i, t in enumerate(txns):
+        r = 2 + i
+        for col, val in enumerate(
+            [t["client"], t["category"], t["scheme"], t["folio"], t["sr"], t["type"],
+             t["date"], t["amount"], t["pur_nav"], t["units"], t["sensex"],
+             t["cur_value"], t["days"], t["stt"]], start=1):
+            c = ws.cell(row=r, column=col, value=val)
+            c.font = Font(name="Arial", size=10)
+            c.border = box
+            if col == 7:
+                c.number_format = 'DD-MMM-YY'
+            elif col in (8, 9, 10, 11, 12, 14):
+                c.number_format = money
+            elif col in (5, 13):
+                c.number_format = '#,##0'
+
+    for col, width in zip(range(1, 15),
+                          (30, 32, 46, 18, 6, 16, 12, 16, 12, 14, 11, 16, 8, 9)):
+        ws.column_dimensions[chr(64 + col) if col <= 26 else "A"].width = width
+    ws.freeze_panes = "E2"
+    ws.auto_filter.ref = f"A1:N{max(2, len(txns) + 1)}"
+    return ws
+
+
+def write_workbook(out_path, clients, rows, txns=()):
     subprocess.run([sys.executable, str(BUILDER), str(out_path)], check=True,
                    stdout=subprocess.DEVNULL)
     wb = load_workbook(out_path)
@@ -244,6 +324,9 @@ def write_workbook(out_path, clients, rows):
             keep = key in ("client", "category", "scheme", "folio") or val not in (None, "", 0, 0.0)
             if keep and val not in (None, ""):
                 iv.cell(row=r, column=col).value = val
+
+    if txns:
+        add_transactions_sheet(wb, txns)
     wb.save(out_path)
 
 
@@ -252,18 +335,20 @@ def main():
         print(__doc__)
         return 2
     out_path = Path(sys.argv[1])
-    clients, all_rows, all_ok = [], [], True
+    clients, all_rows, all_txns, all_ok = [], [], [], True
 
     for report in sys.argv[2:]:
         print(f"\n{Path(report).name}")
-        client, rows, grand = parse_report(report)
+        client, rows, grand, txns = parse_report(report)
         print(f"  client                : {client['name']}"
               + (f"  (rep by {client['rep_by']})" if client["rep_by"] else ""))
         all_ok &= check(client, rows, grand)
+        print(f"  transactions parsed   : {len(txns)}")
         clients.append(client)
         all_rows.extend(rows)
+        all_txns.extend(txns)
 
-    write_workbook(out_path, clients, all_rows)
+    write_workbook(out_path, clients, all_rows, all_txns)
 
     csv_path = out_path.with_suffix(".csv")
     with open(csv_path, "w", newline="", encoding="utf-8-sig") as fh:
@@ -278,7 +363,8 @@ def main():
                 row["cur_nav"], "" if row["xirr"] is None else round(row["xirr"] * 100, 2),
             ])
 
-    print(f"\nwritten: {out_path}  ({len(all_rows)} scheme rows, {len(clients)} client(s))")
+    print(f"\nwritten: {out_path}  ({len(all_rows)} scheme rows, "
+          f"{len(all_txns)} transactions, {len(clients)} client(s))")
     print(f"written: {csv_path}")
     print(f"\nRecalculate {out_path.name} (open and save in Excel, or run the "
           "xlsx recalc script) so the Total Review sheet shows the new figures.")
