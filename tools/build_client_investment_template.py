@@ -510,9 +510,10 @@ for i, (label, fmt) in enumerate(DETAILS):
     lc.border = BOX
     lc.alignment = Alignment(vertical="center", indent=1)
     col = CLI_COLS[label]
+    lookup = (f'INDEX(Clients!${chr(64 + col)}${CLI_FIRST}:${chr(64 + col)}'
+              f'${CLI_LAST},MATCH($C$4,{C_NAME},0))')
     vc = cr.cell(row=row, column=3, value=(
-        f'=IF($C$4="","",IFERROR(INDEX(Clients!${chr(64+col)}${CLI_FIRST}:'
-        f'${chr(64+col)}${CLI_LAST},MATCH($C$4,{C_NAME},0)),""))'))
+        f'=IF($C$4="","",IFERROR(IF({lookup}="","",{lookup}),""))'))
     vc.font = CALC_FONT
     vc.fill = PatternFill("solid", fgColor=GREY)
     vc.number_format = TEXT if fmt is CNT else fmt
@@ -595,10 +596,10 @@ for i in range(RPT_LAST - RPT_FIRST + 1):
     style_body(sr, CNT, "calc", stripe)
     sr.alignment = Alignment(horizontal="center", vertical="center")
     for col, src, fmt in DETAIL_SRC:
+        lookup = (f'INDEX(Investments!${src}${INV_FIRST}:${src}${INV_LAST},'
+                  f'MATCH($A{row},Investments!$V${INV_FIRST}:$V${INV_LAST},0))')
         c = cr.cell(row=row, column=col, value=(
-            f'=IF($A{row}="","",IFERROR(INDEX(Investments!${src}${INV_FIRST}:'
-            f'${src}${INV_LAST},MATCH($A{row},Investments!$V${INV_FIRST}:'
-            f'$V${INV_LAST},0)),""))'))
+            f'=IF($A{row}="","",IFERROR(IF({lookup}="","",{lookup}),""))'))
         style_body(c, fmt, "calc", stripe)
 
 TOT = RPT_LAST + 1
