@@ -9,6 +9,9 @@ do not reconcile against its 19-fund holdings table, the workbook shows
 both the stated figure and the figure computed from the holdings, and the
 Summary sheet lists the differences rather than quietly correcting them.
 
+Recommendation 4 of the report (Direct Plan Migration) is omitted at the
+client's instruction; the other three are reproduced in full.
+
 Sheets: Summary | Holdings | Category | Proposed Portfolio | Action Plan
 """
 
@@ -113,11 +116,6 @@ RECS = [
       "Phase 2 (Weeks 3-8): Exit micro-positions and worst performers",
       "Phase 3 (Months 2-4): Exit redundant flexi caps and thematic duplicates",
       "Phase 4 (Months 4-6): Finalize rebalancing and tax documentation"]),
-    ("Recommendation 4", "Consider Direct Plan Migration", "Switching from Regular to Direct plans can save Rs 2-3 lakh annually in fees.",
-     ["Review your relationship with your fund distributor",
-      "Calculate tax cost of switching vs. long-term fee savings",
-      "Direct plans typically have 0.5-1.5% lower expense ratios",
-      "Over 10 years: Direct plans can add Rs 23+ lakh to your portfolio"]),
 ]
 
 PLAN = [
