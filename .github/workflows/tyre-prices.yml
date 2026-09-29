@@ -4,7 +4,7 @@ on:
   # Temporary: one run from the PR branch to collect prices (workflow_dispatch needs the file on main). Remove before merge.
   push:
     branches: [claude/wonderful-hypatia-vxf8v6]
-    paths: [.github/workflows/tyre-prices.yml]
+    paths: [.github/workflows/tyre-prices.yml, tyre_prices/**]
   workflow_dispatch:
     inputs:
       months:

@@ -36,13 +36,19 @@ def summarize(
     key: Callable[[PriceRecord], str | None],
     sort_by: str = "group",
     prefer_usd: bool = True,
+    min_tonnes: float = 1.0,
 ) -> list[GroupStats]:
-    """Price statistics per ``key(record)`` and currency; records without a per-tonne price are skipped."""
+    """Price statistics per ``key(record)`` and currency.
+
+    Records without a per-tonne price are skipped, and so are those weighing less than
+    ``min_tonnes``: a few kilograms of samples turn into absurd per-tonne prices.
+    """
     groups: dict[tuple[str, str], list[tuple[float, float]]] = defaultdict(list)
     for record in records:
         price, currency = record_price(record, prefer_usd)
-        if price is not None:
-            groups[(key(record) or "unknown", currency)].append((price, record.tonnes or 0.0))
+        if price is None or (record.tonnes is not None and record.tonnes < min_tonnes):
+            continue
+        groups[(key(record) or "unknown", currency)].append((price, record.tonnes or 0.0))
 
     stats = []
     for (group, currency), items in groups.items():

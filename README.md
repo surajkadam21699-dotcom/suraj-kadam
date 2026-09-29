@@ -5,7 +5,7 @@ it as a price per tonne: by month, by origin country and by grade.
 
 | Command | Source | What you get |
 | --- | --- | --- |
-| `comtrade` | [UN Comtrade API](https://comtradeplus.un.org) (official customs statistics) | Monthly CIF value and net weight of India's imports per origin country, as USD per tonne. Complete and official, but published a few months late and not split by grade. |
+| `comtrade` | [UN Comtrade API](https://comtradeplus.un.org) (official customs statistics) | Monthly CIF value and net weight of India's imports, as USD per tonne: overall by month, and by origin country for the latest month and for the whole period. Complete and official, but published a few months late and not split by grade. |
 | `shipments` | Trade-data pages such as [Zauba](https://www.zauba.com) and [Seair](https://www.seair.co.in) | Individual shipments (date, description, origin, port, quantity, value), as price per tonne by grade: cut, baled, shredded, crumb, whole. Recent, but limited to the sample rows the sites show publicly. |
 
 ## Run it on GitHub
@@ -50,6 +50,8 @@ unit_price, price_per_tonne, price_per_tonne_usd`.
 - Shipment tables are recognised by their column headers (Date, HS Code, Description, Origin Country, Port of
   Discharge, Unit, Quantity, Value (INR), Per Unit (INR) and common variants), so pages from other sites with a similar
   table work too. Tables that a page builds with JavaScript are not supported.
+- Summary tables leave out figures for less than 1 tonne (a few kilograms of samples give absurd per-tonne prices);
+  the CSV keeps them.
 - Values whose column header names no currency are taken as INR (`--currency USD` changes that). INR records get USD
   prices only when you pass `--inr-per-usd`.
 - A shipment is kept when its description mentions tyres and reads like scrap (scrap, waste, cut, bales, shredded,

@@ -136,8 +136,13 @@ def run_comtrade(args: argparse.Namespace, session: requests.Session) -> int:
         return 1
 
     several = len(hs_codes) > 1
-    reported = sorted(record.period for record in records if record.period)
+    reported = sorted(record.period for record in records if record.period and record.price_per_tonne)
     reporter = "India" if args.reporter == comtrade.INDIA else f"Reporter {args.reporter}"
+    partners = [record for record in records if record.origin != "World"]
+
+    def by_origin(record: PriceRecord) -> str | None:
+        return f"{record.origin} (HS {record.hs_code})" if several else record.origin
+
     tables: list[Table] = [
         (
             f"{reporter} imports of HS {', '.join(hs_codes)}: CIF price per tonne, all origins",
@@ -147,16 +152,20 @@ def run_comtrade(args: argparse.Namespace, session: requests.Session) -> int:
                 lambda record: f"{record.period} HS {record.hs_code}" if several else record.period,
             ),
         ),
-        (
-            f"By origin country, {reported[0]} to {reported[-1]}" if reported else "By origin country",
-            "Origin",
-            summarize(
-                [record for record in records if record.origin != "World"],
-                lambda record: f"{record.origin} (HS {record.hs_code})" if several else record.origin,
-                sort_by="tonnes",
-            ),
-        ),
     ]
+    if reported:
+        tables += [
+            (
+                f"By origin country, {reported[-1]} (latest)",
+                "Origin",
+                summarize([r for r in partners if r.period == reported[-1]], by_origin, sort_by="tonnes"),
+            ),
+            (
+                f"By origin country, {reported[0]} to {reported[-1]}",
+                "Origin",
+                summarize(partners, by_origin, sort_by="tonnes"),
+            ),
+        ]
     _emit(args, "comtrade", records, tables)
     return 0
 

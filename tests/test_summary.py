@@ -29,10 +29,17 @@ def test_currencies_are_kept_apart():
 
 
 def test_unpriced_records_are_skipped_and_missing_groups_labelled():
-    stats = summarize([priced(None, 10, "UK"), priced(100, 0, None)], key=lambda r: r.origin)
+    stats = summarize([priced(None, 10, "UK"), priced(100, None, None)], key=lambda r: r.origin)
     assert len(stats) == 1
     assert stats[0].group == "unknown"
     assert stats[0].weighted_avg is None  # no weight to average over
+
+
+def test_records_under_the_minimum_weight_are_left_out():
+    records = [priced(95, 20, "Bahrain"), priced(92752, 0.001, "Bahrain")]
+    [stat] = summarize(records, key=lambda r: r.origin)
+    assert (stat.records, stat.high) == (1, 95)
+    assert summarize(records, key=lambda r: r.origin, min_tonnes=0)[0].high == 92752
 
 
 STAT = GroupStats("United Kingdom", "USD", 2, 40.0, 275.0, 250.0, 200.0, 300.0)

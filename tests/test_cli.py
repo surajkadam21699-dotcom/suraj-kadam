@@ -55,10 +55,30 @@ def test_comtrade_command(tmp_path, capsys, monkeypatch, fixtures_dir, fake_sess
 
     assert code == 0
     assert [params["period"] for _, params in session.calls] == ["202512", "202601", "202602"]
-    by_period, by_origin = json.loads((tmp_path / "comtrade_summary.json").read_text(encoding="utf-8"))["tables"]
+    tables = json.loads((tmp_path / "comtrade_summary.json").read_text(encoding="utf-8"))["tables"]
+    by_period, latest, by_origin = tables
     assert [(row["group"], row["weighted_avg"]) for row in by_period["rows"]] == [("2026-01", 210)]
+    assert latest["title"] == "By origin country, 2026-01 (latest)"
+    assert [row["group"] for row in latest["rows"]] == ["United Kingdom", "Australia", "New Zealand"]
     assert [row["group"] for row in by_origin["rows"]] == ["United Kingdom", "Australia", "New Zealand"]
     assert "India imports of HS 400400: CIF price per tonne, all origins" in capsys.readouterr().out
+
+
+def test_comtrade_latest_table_uses_the_last_month_with_prices(tmp_path, monkeypatch, fixtures_dir, fake_session,
+                                                               fake_response):
+    monkeypatch.delenv("COMTRADE_API_KEY", raising=False)
+    january = json.loads((fixtures_dir / "comtrade_india_400400.json").read_text(encoding="utf-8"))
+    february = json.loads(json.dumps(january).replace('"202601"', '"202602"'))
+    february["data"] = [row for row in february["data"] if row["partnerDesc"] in ("World", "Australia")]
+    session = fake_session(lambda url, params: fake_response(january if params["period"] == "202601" else february))
+
+    assert main(["comtrade", "--start", "2026-01", "--end", "2026-02", "--pause", "0", "--out", str(tmp_path)],
+                session=session) == 0
+    by_period, latest, by_origin = json.loads((tmp_path / "comtrade_summary.json").read_text())["tables"]
+    assert [row["group"] for row in by_period["rows"]] == ["2026-01", "2026-02"]
+    assert [row["group"] for row in latest["rows"]] == ["Australia"]
+    assert by_origin["title"] == "By origin country, 2026-01 to 2026-02"
+    assert [row["records"] for row in by_origin["rows"]] == [2, 1, 1]  # Australia, United Kingdom, New Zealand
 
 
 def test_comtrade_command_without_published_data(tmp_path, monkeypatch, fake_session, fake_response):
