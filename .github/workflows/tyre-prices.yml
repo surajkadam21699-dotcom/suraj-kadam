@@ -1,0 +1,50 @@
+name: Scrap tyre import prices
+
+on:
+  workflow_dispatch:
+    inputs:
+      months:
+        description: Months of UN Comtrade figures to fetch
+        required: false
+        default: "24"
+      inr_per_usd:
+        description: INR per USD for converting shipment prices (leave empty to keep INR)
+        required: false
+        default: ""
+  schedule:
+    - cron: "17 6 5 * *" # 06:17 UTC on the 5th of every month
+
+permissions:
+  contents: read
+
+jobs:
+  scrape:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+      - name: Official import statistics (UN Comtrade)
+        env:
+          COMTRADE_API_KEY: ${{ secrets.COMTRADE_API_KEY }}
+          MONTHS: ${{ inputs.months || '24' }}
+        run: python -m tyre_prices comtrade --months "$MONTHS" --summary-md "$GITHUB_STEP_SUMMARY"
+      - name: Shipment prices from trade-data sites
+        if: ${{ !cancelled() }}
+        # These sites often block automated requests; that should not fail the run.
+        continue-on-error: true
+        env:
+          INR_PER_USD: ${{ inputs.inr_per_usd }}
+        run: python -m tyre_prices shipments ${INR_PER_USD:+--inr-per-usd "$INR_PER_USD"} --summary-md "$GITHUB_STEP_SUMMARY"
+      - name: Upload results
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: tyre-import-prices
+          path: output/
+          if-no-files-found: warn
