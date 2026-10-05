@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Health Cover Comparison — Star Health Super Star Preferred</title>
+<style>
+  @page { size: A4; margin: 13mm 12mm 11mm; }
+
+  :root{
+    --ink:#16232B; --soft:#4A5C63; --faint:#7E8D92;
+    --rule:#D4DBDB; --hair:#E9EEED; --band:#F4F7F6;
+    --navy:#1F4E5F;
+    --good:#2C6650; --goodbg:#E3EFE9;
+    --warn:#8F6317; --warnbg:#F5EDDC;
+    --stop:#A6362C; --stopbg:#F5E3E0;
+    --serif:"Charter","Bitstream Charter","Liberation Serif","DejaVu Serif",Georgia,serif;
+    --sans:"Liberation Sans","DejaVu Sans",Arial,sans-serif;
+    --mono:"DejaVu Sans Mono","Liberation Mono",monospace;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;font-family:var(--sans);font-size:9pt;line-height:1.45;color:var(--ink);
+       background:#fff;-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+
+  .lh{display:flex;justify-content:space-between;align-items:flex-end;
+      border-bottom:2.2pt solid var(--navy);padding-bottom:5pt;margin-bottom:10pt;}
+  .lh .firm{font-family:var(--serif);font-size:12.4pt;font-weight:700;color:var(--navy);
+            line-height:1.1;letter-spacing:-.01em;}
+  .lh .arn{font-family:var(--mono);font-size:6.4pt;letter-spacing:.07em;color:var(--faint);
+           text-transform:uppercase;margin-top:2pt;}
+  .lh .meta{text-align:right;font-family:var(--mono);font-size:6.6pt;color:var(--faint);
+            line-height:1.5;}
+
+  h1{font-family:var(--serif);font-size:18.5pt;font-weight:700;letter-spacing:-.018em;
+     margin:0 0 1pt;line-height:1.12;}
+  .sub{font-family:var(--mono);font-size:6.9pt;letter-spacing:.09em;text-transform:uppercase;
+       color:var(--navy);margin-bottom:9pt;}
+
+  h2{font-family:var(--serif);font-size:11pt;font-weight:600;margin:9pt 0 4pt;
+     letter-spacing:-.008em;border-bottom:.8pt solid var(--rule);padding-bottom:2.5pt;}
+
+  /* ------------------------------------------------------- recommendation */
+  .rec{background:var(--goodbg);border-left:2.8pt solid var(--good);padding:8pt 11pt;
+       display:flex;gap:14pt;align-items:flex-start;}
+  .rec .tag{font-family:var(--mono);font-size:6.4pt;font-weight:700;letter-spacing:.1em;
+            text-transform:uppercase;color:#fff;background:var(--good);padding:2.5pt 6pt;
+            white-space:nowrap;margin-top:1pt;}
+  .rec .body{font-size:9.4pt;line-height:1.48;}
+  .rec b{color:var(--good);font-weight:700;}
+
+  /* --------------------------------------------------------------- table */
+  table{width:100%;border-collapse:collapse;font-size:8.4pt;table-layout:fixed;}
+  th{font-family:var(--mono);font-size:6.3pt;letter-spacing:.07em;text-transform:uppercase;
+     color:var(--faint);font-weight:500;text-align:left;padding:0 6pt 3pt 0;
+     border-bottom:1.1pt solid var(--ink);}
+  th.r,td.r{text-align:right;padding-right:0;padding-left:8pt;}
+  th:last-child,td:last-child{padding-left:11pt;}
+  td{padding:3.8pt 6pt 3.8pt 0;border-bottom:.6pt solid var(--hair);vertical-align:middle;}
+  td.r{font-family:var(--mono);font-variant-numeric:tabular-nums;white-space:nowrap;}
+  td.opt{font-weight:600;}
+  td.opt small{display:block;font-weight:400;color:var(--faint);font-size:6.7pt;
+               font-family:var(--mono);margin-top:.8pt;}
+  tr.pick td{background:var(--goodbg);}
+  tr.pick td.opt{color:var(--good);}
+  .pill{font-family:var(--mono);font-size:6.2pt;letter-spacing:.05em;padding:1pt 4pt;
+        white-space:nowrap;}
+  .pill.g{background:var(--good);color:#fff;}
+  .pill.w{background:var(--warnbg);color:var(--warn);}
+  .scroll{width:100%;}
+
+  /* ----------------------------------------------------------- two panes */
+  .two{display:grid;grid-template-columns:1fr 1fr;gap:14pt;}
+  .pane h3{font-family:var(--serif);font-size:9.6pt;font-weight:700;margin:0 0 4pt;}
+  .pane p{margin:0 0 6pt;font-size:8.3pt;color:var(--soft);line-height:1.45;}
+  .pane p:last-child{margin-bottom:0;}
+  .pane b{color:var(--ink);font-weight:600;}
+
+  .stat{display:flex;align-items:baseline;gap:7pt;margin-bottom:4pt;}
+  .stat .n{font-family:var(--serif);font-size:17pt;font-weight:700;color:var(--good);
+           line-height:1;font-variant-numeric:tabular-nums;}
+  .stat .t{font-size:8pt;color:var(--soft);line-height:1.3;}
+
+  .be{width:100%;border-collapse:collapse;font-size:8.2pt;margin-top:3pt;}
+  .be th{font-size:6.2pt;padding-bottom:2.5pt;}
+  .be td{padding:3.4pt 6pt 3.4pt 0;}
+  .be td.r{font-family:var(--mono);font-variant-numeric:tabular-nums;text-align:right;
+           padding-left:6pt;padding-right:0;}
+  .be .ok{color:var(--good);font-weight:600;}
+  .be .no{color:var(--stop);font-weight:600;}
+
+  .note{background:var(--warnbg);border-left:2.4pt solid var(--warn);padding:5.5pt 9pt;
+        font-size:8pt;line-height:1.42;margin-top:8pt;}
+  .note b{color:var(--ink);}
+
+  ul.chk{list-style:none;padding:0;margin:0;}
+  ul.chk li{position:relative;padding-left:12pt;margin-bottom:3pt;font-size:8.2pt;
+            line-height:1.4;color:var(--soft);}
+  ul.chk li::before{content:"";position:absolute;left:0;top:.56em;width:6pt;height:1.3pt;
+                    background:var(--navy);}
+  ul.chk b{color:var(--ink);font-weight:600;}
+
+  footer{margin-top:8pt;padding-top:4.5pt;border-top:.8pt solid var(--rule);
+         font-size:6.3pt;line-height:1.45;color:var(--faint);font-style:italic;}
+</style>
+</head>
+<body>
+
+<div class="lh">
+  <div>
+    <div class="firm">Opulencia Capital Private Limited</div>
+    <div class="arn">Flat 501, Piyusha Society, Law College Road, Erandwane, Pune 411004</div>
+  </div>
+  <div class="meta">
+    9850099777<br>
+    info@opulencemoney.com<br>
+    5 October 2026
+  </div>
+</div>
+
+<h1>Health Cover Comparison</h1>
+<div class="sub">Star Health · Super Star — Preferred · four quoted options</div>
+
+<div class="rec">
+  <span class="tag">Recommendation</span>
+  <span class="body">
+    Take the <b>₹20 lakh cover</b>. It costs only <b>₹12,719 a year more</b> than ₹10 lakh —
+    27.8% more premium for twice the protection. On the payment term, <b>pay annually</b>
+    unless the money would otherwise sit idle in a savings account: the three-year discount
+    is smaller than what the same cash earns in a fixed deposit.
+  </span>
+</div>
+
+<h2>The four options</h2>
+<div class="scroll">
+  <table>
+    <thead>
+      <tr>
+        <th style="width:20%">Option</th>
+        <th class="r" style="width:12%">Premium</th>
+        <th class="r" style="width:13%">Cost per year</th>
+        <th class="r" style="width:12%">3 × annual</th>
+        <th class="r" style="width:12%">You save</th>
+        <th class="r" style="width:14%">Per ₹1 lakh</th>
+        <th style="width:17%">Verdict</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td class="opt">₹10 lakh — 1 year<small>annual renewal</small></td>
+        <td class="r">₹45,823</td><td class="r">₹45,823</td>
+        <td class="r">—</td><td class="r">—</td><td class="r">₹4,582</td>
+        <td><span class="pill w">Cover too thin</span></td>
+      </tr>
+      <tr>
+        <td class="opt">₹10 lakh — 3 years<small>paid up front</small></td>
+        <td class="r">₹1,31,460</td><td class="r">₹43,820</td>
+        <td class="r">₹1,37,469</td><td class="r">₹6,009</td><td class="r">₹4,382</td>
+        <td><span class="pill w">Weak discount</span></td>
+      </tr>
+      <tr class="pick">
+        <td class="opt">₹20 lakh — 1 year<small>annual renewal</small></td>
+        <td class="r">₹58,542</td><td class="r">₹58,542</td>
+        <td class="r">—</td><td class="r">—</td><td class="r">₹2,927</td>
+        <td><span class="pill g">Recommended</span></td>
+      </tr>
+      <tr>
+        <td class="opt">₹20 lakh — 3 years<small>paid up front</small></td>
+        <td class="r">₹1,64,746</td><td class="r">₹54,915</td>
+        <td class="r">₹1,75,626</td><td class="r">₹10,880</td><td class="r">₹2,746</td>
+        <td><span class="pill g">Fair alternative</span></td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<div class="two" style="margin-top:9pt">
+  <div class="pane">
+    <h3>Why ₹20 lakh, not ₹10 lakh</h3>
+    <div class="stat">
+      <span class="n">36%</span>
+      <span class="t">cheaper per rupee of cover —<br>₹2,927 per lakh against ₹4,582</span>
+    </div>
+    <p>In health insurance the first rupee of cover is always the most expensive. Doubling
+      the sum insured from ₹10 lakh to ₹20 lakh adds <b>₹12,719 a year, or 27.8%</b> — not
+      another 100%.</p>
+    <p>A single cardiac or oncology admission in a Pune or Mumbai private hospital can run
+      past ₹10 lakh on its own. At that point the thinner cover stops at the worst possible
+      moment, having cost you only ₹1,060 a month less.</p>
+  </div>
+
+  <div class="pane">
+    <h3>Is the three-year lock worth it?</h3>
+    <p>Paying three years up front costs you the use of the year-two and year-three money.
+      The break-even is the return at which paying annually comes out ahead.</p>
+    <table class="be">
+      <thead>
+        <tr><th>Cover</th><th class="r">Saving</th><th class="r">Break-even</th><th class="r">Verdict</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>₹10 lakh</td><td class="r">₹6,009</td><td class="r">4.64%</td>
+            <td class="r no">Poor</td></tr>
+        <tr><td>₹20 lakh</td><td class="r">₹10,880</td><td class="r">6.76%</td>
+            <td class="r ok">Fair</td></tr>
+      </tbody>
+    </table>
+    <p style="margin-top:6pt">A fixed deposit comfortably beats 4.64%, so on the ₹10 lakh
+      option the three-year discount is worth <b>less than leaving the money in the bank</b>.
+      At ₹20 lakh the break-even is close to FD rates, making it roughly a wash — take it if
+      the cash would otherwise sit idle, or if you want the premium rate fixed for three
+      years.</p>
+  </div>
+</div>
+
+<div class="note">
+  <b>One figure to confirm before you decide.</b> The savings above are the arithmetic
+  difference between the two premiums quoted for the same cover — ₹1,37,469 less ₹1,31,460
+  is ₹6,009 at ₹10 lakh, and ₹1,75,626 less ₹1,64,746 is ₹10,880 at ₹20 lakh. If a larger
+  savings figure has been quoted elsewhere, ask which base premium it is measured against,
+  since it will not be the annual premium shown in the same quote.
+</div>
+
+<h2>Before you buy</h2>
+<ul class="chk">
+  <li><b>Check whether these premiums include GST.</b> A quote excluding it changes the
+    comparison materially, and the tax treatment of health premiums has moved in recent
+    years.</li>
+  <li><b>The three-year premium is not fully deductible in year one.</b> Under Section 80D a
+    multi-year premium is allowed proportionately across the years it covers, so paying up
+    front brings no tax advantage — and 80D applies only under the old tax regime.</li>
+  <li><b>A three-year lock cuts both ways.</b> It fixes your premium against mid-term rate
+    revisions, which is its real advantage. It also prevents you porting to a better or
+    cheaper insurer for three years.</li>
+  <li><b>Confirm the waiting periods and room-rent terms</b> for pre-existing conditions and
+    specific treatments, and whether the plan carries any room-rent or co-payment cap. These
+    decide what you actually recover, far more than the premium difference does.</li>
+  <li><b>Declare existing conditions in full.</b> Nothing in this comparison matters if a
+    claim is later rejected for non-disclosure.</li>
+</ul>
+
+<footer>
+  Prepared for discussion from premium quotations received from Star Health on 5 October 2026
+  for Super Star — Preferred. Opulencia Capital Private Limited is an AMFI-registered mutual
+  fund distributor; this sheet compares quotations supplied by the insurer and is neither a
+  solicitation nor a recommendation to purchase insurance, nor an insurance-intermediary
+  service. Premiums, terms, waiting periods and tax treatment are as determined by the
+  insurer and prevailing law, and are subject to change and to underwriting. Break-even
+  returns are calculated by discounting three annual premiums to present value and comparing
+  with the single three-year premium; they assume premiums remain unchanged on renewal, which
+  is not guaranteed. Please read the policy wording and prospectus before purchasing.
+</footer>
+
+</body>
+</html>
