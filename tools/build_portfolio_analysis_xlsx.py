@@ -21,6 +21,7 @@ from openpyxl import Workbook
 from openpyxl.chart import BarChart, Reference
 from openpyxl.styles import Alignment, Border, Font, PatternFill, Side
 from openpyxl.utils import get_column_letter
+from chart_fix import fix_chart
 
 FONT = "Arial"
 NAVY, BLUE, GREY, WHITE, YELLOW, LINE = "1F3864", "2E75B6", "F2F2F2", "FFFFFF", "FFF2CC", "BFBFBF"
@@ -301,7 +302,8 @@ def build_category(wb):
     chart.add_data(Reference(ws, min_col=3, min_row=5, max_row=t - 1), titles_from_data=True)
     chart.set_categories(Reference(ws, min_col=1, min_row=first, max_row=t - 1))
     chart.legend = None
-    ws.add_chart(chart, f"G5")
+    fix_chart(chart, cat_ref=f"'Category'!$A${first}:$A${t - 1}", horizontal=True)
+    ws.add_chart(chart, "G5")
     return ws
 
 

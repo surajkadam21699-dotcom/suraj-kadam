@@ -28,6 +28,7 @@ from openpyxl.formatting.rule import FormulaRule
 from openpyxl.styles import Alignment, Border, Font, PatternFill, Side
 from openpyxl.utils import get_column_letter
 from openpyxl.worksheet.datavalidation import DataValidation
+from chart_fix import fix_chart
 
 # ---------------------------------------------------------------- constants --
 FONT = "Arial"
@@ -572,6 +573,7 @@ def build_summary(wb, best_row, imp_row):
     chart.add_data(data, titles_from_data=True)
     chart.set_categories(cats)
     chart.legend = None
+    fix_chart(chart, cat_ref=f"'Summary'!$B${first}:$B${tot - 1}")
     ws.add_chart(chart, f"B{r + 2}")
     return ws
 

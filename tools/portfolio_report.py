@@ -37,6 +37,7 @@ from openpyxl.formatting.rule import DataBarRule
 from openpyxl.styles import Alignment, Border, Font, PatternFill, Side
 from openpyxl.utils import get_column_letter
 from openpyxl.worksheet.datavalidation import DataValidation
+from chart_fix import fix_chart
 
 FONT = "Arial"
 NAVY, BLUE, GREY, WHITE, YELLOW, LINE = "1F3864", "2E75B6", "F2F2F2", "FFFFFF", "FFF2CC", "BFBFBF"
@@ -492,6 +493,7 @@ def write_analysis(path, meta, rows, findings, cats, keeps):
     chart.add_data(Reference(ws, min_col=3, min_row=4, max_row=ct - 1), titles_from_data=True)
     chart.set_categories(Reference(ws, min_col=1, min_row=first, max_row=ct - 1))
     chart.legend = None
+    fix_chart(chart, cat_ref=f"'Category'!$A${first}:$A${ct - 1}", horizontal=True)
     ws.add_chart(chart, "F4")
 
     # -------------------------------------------------- Proposed Portfolio --

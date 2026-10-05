@@ -24,6 +24,7 @@ from openpyxl.formatting.rule import CellIsRule
 from openpyxl.styles import Alignment, Border, Font, PatternFill, Side
 from openpyxl.utils import get_column_letter
 from openpyxl.worksheet.datavalidation import DataValidation
+from chart_fix import fix_chart
 
 # ---------------------------------------------------------------- constants --
 FONT = "Arial"
@@ -479,6 +480,8 @@ bar.add_data(Reference(tr, min_col=6, max_col=6, min_row=18, max_row=min(CL_F + 
 bar.add_data(Reference(tr, min_col=8, max_col=8, min_row=18, max_row=min(CL_F + 19, CL_L)), titles_from_data=True)
 bar.set_categories(Reference(tr, min_col=2, min_row=CL_F, max_row=min(CL_F + 19, CL_L)))
 bar.y_axis.title = "Amount"
+fix_chart(bar, cat_ref=f"'Total Review'!$B${CL_F}:$B${min(CL_F + 19, CL_L)}",
+          horizontal=True)
 tr.add_chart(bar, "N25")
 
 tr.freeze_panes = "A4"

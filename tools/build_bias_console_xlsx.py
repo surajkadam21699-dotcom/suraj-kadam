@@ -28,6 +28,7 @@ from openpyxl.formatting.rule import DataBarRule
 from openpyxl.styles import Alignment, Border, Font, PatternFill, Side
 from openpyxl.utils import get_column_letter
 from openpyxl.worksheet.datavalidation import DataValidation
+from chart_fix import fix_chart
 
 FONT = "Arial"
 NAVY, BLUE, GREY, WHITE, SUNK, LINE = "17323E", "1B4D63", "F2F4F6", "FFFFFF", "E8ECEF", "C8D2D8"
@@ -384,6 +385,7 @@ def build_console(wb, starts):
     chart.add_data(Reference(ws, min_col=3, min_row=9, max_row=13), titles_from_data=True)
     chart.set_categories(Reference(ws, min_col=1, min_row=10, max_row=13))
     chart.legend = None
+    fix_chart(chart, cat_ref="'Console'!$A$10:$A$13")
     ws.add_chart(chart, "A21")
 
     # -------------------------------------------------------- the indicators --
