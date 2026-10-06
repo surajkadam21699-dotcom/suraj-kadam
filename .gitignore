@@ -1,2 +1,12 @@
 __pycache__/
 *.pyc
+
+# Client deliverables stay out of the repo - they carry PAN, addresses,
+# folio numbers and holdings. Generate them locally from tools/.
+*_Family_*.xlsx
+*_Family_*.pdf
+*_Fund_Performance_*.xlsx
+Portfolio_Fund_Analysis.xlsx
+Portfolio_Review_1Pager.xlsx
+Health_Cover_Comparison*.pdf
+SWP_Projection*.pdf
