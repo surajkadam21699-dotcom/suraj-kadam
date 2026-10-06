@@ -10,3 +10,8 @@ Portfolio_Fund_Analysis.xlsx
 Portfolio_Review_1Pager.xlsx
 Health_Cover_Comparison*.pdf
 SWP_Projection*.pdf
+# and the HTML sources those are rendered from
+tools/pramod_nikalje_report.html
+tools/thite_health_comparison.html
+tools/health_cover_comparison.html
+tools/swp_projection.html
