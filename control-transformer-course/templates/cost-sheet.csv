@@ -1,0 +1,17 @@
+category,item,quantity,unit,rate
+material,CRNO/CRGO EI laminations,1.60,kg,140
+material,Enamelled copper wire,0.55,kg,1000
+material,Bobbin / coil former,1,pc,25
+material,Insulation paper and tape,1,set,15
+material,Impregnating varnish,0.08,kg,300
+material,Mounting brackets / clamps,1,set,40
+material,Terminal block and screws,1,set,45
+material,Rating label,1,pc,3
+material,Packing box,1,pc,20
+labour,Winding,0.25,hr,120
+labour,Assembly and lacing,0.20,hr,120
+labour,Varnish and baking (share),0.05,hr,120
+labour,Testing and packing,0.10,hr,120
+overhead,Power and utilities,1,unit,10
+overhead,Factory overhead share,1,unit,40
+overhead,Warranty provision,1,unit,10

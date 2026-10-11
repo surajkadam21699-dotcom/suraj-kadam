@@ -1,0 +1,7 @@
+device,qty,sealed_va,inrush_va,starts_together
+Main contactor 40A,1,12,110,yes
+Star contactor 25A,1,8,70,yes
+Delta contactor 40A,1,12,110,no
+Timer,1,3,3,no
+Pilot lamp,3,2,2,no
+Auxiliary relay,2,3,20,no
